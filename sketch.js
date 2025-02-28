@@ -30,7 +30,7 @@ function draw() {
 }
 
 function keyPressed(){
-  if(key === " "){
+  if(key === " " && !photo){
     let videoAspect = video.width / video.height;
     let phoneAspect = phoneWidth / phoneHeight;
     
@@ -49,6 +49,8 @@ function keyPressed(){
     
     photo = video.get(cropX, cropY, cropWidth, cropHeight);
     photo.resize(phoneWidth / scaleValue, phoneHeight / scaleValue); //Shrinking captured photo to reduce amount of processing needed
+  } else if(key === " " && photo){
+    photo = null;
   }
 }
 
