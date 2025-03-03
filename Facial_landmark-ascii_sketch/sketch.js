@@ -3,9 +3,10 @@ let asciiChar = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;
 let img; // p5.Image for drawing
 let imgElement; // HTML <img> element for face detection
 let photo;
-let phoneWidth = 360;
-let phoneHeight = 640;
+let phoneWidth = 840;  // width
+let phoneHeight = 680; // height
 let scaleValue = 10;
+let fileInput;
 
 // Landmark labels
 const landmarkLabels = {
@@ -17,13 +18,13 @@ const landmarkLabels = {
 };
 
 let detections; // Store face detection results
-
 function setup() {
-  createCanvas(phoneWidth, phoneHeight);
+  let canvas = createCanvas(phoneWidth, phoneHeight);
+  canvas.parent('canvas-container');
 
-  // Create a file input for uploading images
-  let fileInput = createFileInput(handleFile);
-  fileInput.position(10, 10);
+  // Create and hide file input
+  fileInput = createFileInput(handleFile);
+  fileInput.hide();
 
   fill(255);
   textSize(scaleValue);
@@ -31,7 +32,9 @@ function setup() {
 
   // Load face-api.js models
   loadModels();
+  setupUI();
 }
+
 
 async function loadModels() {
   await faceapi.nets.tinyFaceDetector.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights');
@@ -50,14 +53,22 @@ function draw() {
     }
   } else if (img) {
     // Normal mode
-    image(img, 0, 0, phoneWidth, phoneHeight);
+    let imgWidth = img.width;
+    let imgHeight = img.height;
+
+    // scaling factors
+    let scale = min(phoneWidth / imgWidth, phoneHeight / imgHeight);
+    let newWidth = imgWidth * scale;
+    let newHeight = imgHeight * scale;
+
+    let xOffset = (phoneWidth - newWidth) / 2;
+    let yOffset = (phoneHeight - newHeight) / 2;
+
+    image(img, xOffset, yOffset, newWidth, newHeight);
 
     if (detections) {
-      // Calculate scaling factors
-      const scaleX = phoneWidth / imgElement.width;
-      const scaleY = phoneHeight / imgElement.height;
-
-      console.log('Scaling factors:', scaleX, scaleY); // Debugging
+      const scaleX = newWidth / imgElement.width;
+      const scaleY = newHeight / imgElement.height;
 
       for (let detection of detections) {
         // Draw the facial landmarks
@@ -65,9 +76,8 @@ function draw() {
         noStroke();
         fill(255, 0, 0); // Red color for dots
         for (let point of landmarks.positions) {
-          let x = point._x * scaleX;
-          let y = point._y * scaleY;
-          console.log('Landmark position:', x, y); // Debugging
+          let x = point._x * scaleX + xOffset;
+          let y = point._y * scaleY + yOffset;
           ellipse(x, y, 5, 5); // Draw a small circle at each landmark
         }
       }
@@ -78,11 +88,7 @@ function draw() {
 function handleFile(file) {
   if (file.type === 'image') {
     img = loadImage(file.data, () => {
-      console.log('Image loaded');
-
       img.resize(phoneWidth, phoneHeight);
-      console.log('Resized image dimensions:', img.width, img.height); // Debugging
-
       // Create a cropped and resized version for ASCII conversion
       photo = img.get();
       photo.resize(phoneWidth / scaleValue, phoneHeight / scaleValue);
@@ -93,7 +99,6 @@ function handleFile(file) {
     imgElement.hide();
 
     imgElement.elt.onload = () => {
-      console.log('HTML image element loaded');
       detectFaces(imgElement.elt); // Pass the HTML element to face-api.js
     };
   } else {
@@ -142,6 +147,7 @@ function displayASCIIPhoto() {
 }
 
 function overlayLandmarkLabels() {
+  // Logic for overlaying facial landmarks can be placed here if needed
   const scaleX = phoneWidth / imgElement.width;
   const scaleY = phoneHeight / imgElement.height;
 

@@ -1,16 +1,19 @@
 let img;
 let detections;
 let fileInput;
+const canvasWidth = 840;
+const canvasHeight = 680;
 
 function setup() {
-  createCanvas(640, 480);
+  createCanvas(canvasWidth, canvasHeight).parent('canvas-container');
 
   // Create a file input for uploading images
   fileInput = createFileInput(handleFile);
-  fileInput.position(10, 10);
+  fileInput.hide(); 
 
   // Load face-api.js models
   loadModels();
+  setupUI();
 }
 
 async function loadModels() {
@@ -24,14 +27,25 @@ function draw() {
   background(255);
 
   if (img) {
+    // get original image dimensions
+    let imgWidth = img.width;
+    let imgHeight = img.height;
+
+    // determines best scale while maintaining aspect ratio
+    let scale = min(canvasWidth / imgWidth, canvasHeight / imgHeight);
+    
+    let newWidth = imgWidth * scale;
+    let newHeight = imgHeight * scale;
+
+    // centers image
+    let xOffset = (canvasWidth - newWidth) / 2;
+    let yOffset = (canvasHeight - newHeight) / 2;
+
     // Display the uploaded image
-    image(img, 0, 0, width, height);
+    image(img, xOffset, yOffset, newWidth, newHeight);
 
+    // Calculate scaling factors
     if (detections) {
-      // Calculate scaling factors
-      const scaleX = width / img.width;
-      const scaleY = height / img.height;
-
       for (let detection of detections) {
         // Draw the bounding box
         const box = detection.detection.box;
@@ -39,14 +53,19 @@ function draw() {
         noFill();
         stroke(0, 255, 0);
         strokeWeight(2);
-        rect(box.x * scaleX, box.y * scaleY, box.width * scaleX, box.height * scaleY);
+        rect(
+          box.x * scale + xOffset,
+          box.y * scale + yOffset,
+          box.width * scale,
+          box.height * scale
+        );
 
         // Draw the facial landmarks
         const landmarks = detection.landmarks;
         noStroke();
         fill(255, 0, 0);
         for (let point of landmarks.positions) {
-          ellipse(point._x * scaleX, point._y * scaleY, 5, 5);
+          ellipse(point._x * scale + xOffset, point._y * scale + yOffset, 5, 5);
         }
       }
     }
@@ -60,6 +79,7 @@ function handleFile(file) {
     detectFaces(); // Detect faces in the uploaded image
   } else {
     console.log('Please upload an image file.');
+    showErrorMessage('Invalid file. Please upload an image.');
   }
 }
 
@@ -67,5 +87,11 @@ async function detectFaces() {
   if (img) {
     detections = await faceapi.detectAllFaces(img.elt, new faceapi.TinyFaceDetectorOptions())
       .withFaceLandmarks();
+
+    if (!detections || detections.length === 0) {
+      showErrorMessage('No face detected. Please try another image.');
+    } else {
+      hideErrorMessage();
+    }
   }
 }

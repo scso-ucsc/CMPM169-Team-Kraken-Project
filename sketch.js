@@ -22,6 +22,8 @@ function setup() {
 }
 
 function draw() {
+  background(0);
+
   if(photo){
     displayASCIIPhoto();
   } else if(streamReady){
