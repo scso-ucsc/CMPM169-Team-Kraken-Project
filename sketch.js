@@ -1,4 +1,4 @@
-let asciiChar = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,^`'.                                 "
+let asciiChar = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,^'.                                 "
 
 let video;
 let photo;
@@ -7,10 +7,16 @@ let phoneHeight = 640;
 let scaleValue = 10;
 
 var streamReady = false;
+let faceMesh;
+let faces = [];
+
+function preload(){
+  faceMesh = ml5.faceMesh({ maxFaces: 1, flipped: true });
+}
 
 function setup() {
   createCanvas(360, 640);
-  video = createCapture(VIDEO, function() {
+  video = createCapture(VIDEO, {flipped: true}, function() {
     streamReady = true;
   });
   video.size(640, 480);
@@ -26,6 +32,7 @@ function draw() {
 
   if(photo){
     displayASCIIPhoto();
+    drawFaceResults();
   } else if(streamReady){
     displayVideoFeed();
   }
@@ -51,8 +58,11 @@ function keyPressed(){
     
     photo = video.get(cropX, cropY, cropWidth, cropHeight);
     photo.resize(phoneWidth / scaleValue, phoneHeight / scaleValue); //Shrinking captured photo to reduce amount of processing needed
+    
+    faceMesh.detect(photo, gotFaces);
   } else if(key === " " && photo){
     photo = null;
+    faces = [];
   }
 }
 
@@ -97,4 +107,32 @@ function displayVideoFeed(){
   }
 
   image(video, 0, 0, phoneWidth, phoneHeight, cropX, cropY, cropWidth, cropHeight);
+}
+
+function drawFaceResults(){
+  if (faces.length > 0) {
+    let face = faces[0];
+    console.log(face);
+    
+    let scaleFactor = phoneWidth / scaleValue / photo.width;
+    for (let i = 0; i < face.keypoints.length; i++) {
+      let keypoint = face.keypoints[i];
+      
+      let x = (photo.width - keypoint.x) * scaleFactor;
+      let y = keypoint.y * scaleFactor;
+      
+      let asciiX = x * scaleValue;
+      let asciiY = y * scaleValue;
+      
+      push();
+      stroke(255, 255, 0);
+      strokeWeight(4);
+      point(asciiX, asciiY);
+      pop();
+    }
+  }
+}
+
+function gotFaces(results) {
+  faces = results;
 }
