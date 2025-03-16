@@ -13,9 +13,10 @@ const featureWords = {
   chin: { indices: [6, 7, 8, 9, 10, 54, 48], label: "CHIN" }, // Center bottom point of the jaw
   leftCheekbone: { indices: [0, 27, 29, 2], label: "CHEEKBONE" }, // Left cheekbone
   rightCheekbone: { indices: [14, 16, 27, 29], label: "CHEEKBONE" }, // Right cheekbone
-  leftCheek: { indices: [2, 3, 4, 5, 6, 29], label: "CHEEK" }, // Left cheek
-  rightCheek: { indices: [10, 11, 12, 13, 14, 29], label: "CHEEK" }, // Right cheek
+  leftCheek: { indices: [2, 3, 4, 5, 6, 48, 52, 35, 29], label: "CHEEK" }, // Left cheek
+  rightCheek: { indices: [10, 11, 12, 13, 14, 29, 31, 50, 55], label: "CHEEK" }, // Right cheek
   nose: { indices: [31, 21, 22, 35], label: "NOSE" }, // Nose
+  // philitrum: { indices: [50, 52, 34, 32], label: "PHILITRUM" }, // Philitrum
   bridge: { indices: [29, 21, 22], label: "BRIDGE" }, // Bridge of the nose
   leftNostril: { indices: [31], label: "NOSTRIL" }, // Nostril
   rightNostril: { indices: [34], label: "NOSTRIL" }, // Nostril
@@ -272,8 +273,8 @@ function drawPolygon(polygon, scaleX, scaleY, xOffset, yOffset, color) {
   beginShape();
   for (let point of polygon) {
     // Scale and translate the polygon points to match the image
-    let x = point.x * scaleX + xOffset;
-    let y = point.y * scaleY + yOffset;
+    let x = point.x;
+    let y = point.y;
     vertex(x, y);
   }
   endShape(CLOSE);
