@@ -1,8 +1,8 @@
 let img; // p5.Image for drawing
 let imgElement; // HTML <img> element for face detection
 let photo;
-let phoneWidth = 840;  // width
-let phoneHeight = 680; // height
+let phoneWidth = 360;  // width
+let phoneHeight = 640; // height
 let scaleValue = 6;
 let fileInput;
 
@@ -108,6 +108,10 @@ function draw() {
 
 function handleFile(file) {
   if (file.type === 'image') {
+    img = null;
+    photo = null;
+    detections = null;
+    
     img = loadImage(file.data, () => {
       img.resize(phoneWidth, phoneHeight);
       // Create a cropped and resized version for processing
