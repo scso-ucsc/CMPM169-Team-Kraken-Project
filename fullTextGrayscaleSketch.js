@@ -3,7 +3,7 @@ let imgElement; // HTML <img> element for face detection
 let photo;
 let phoneWidth = 840;  // width
 let phoneHeight = 680; // height
-let scaleValue = 7;
+let scaleValue = 6;
 let fileInput;
 
 // Words to describe facial features
@@ -26,8 +26,8 @@ const featureWords = {
   rightTemple: { indices: [26, 16, 15, 46], label: "TEMPLE" }, // Temple
   leftEye: { indices: [36, 37, 38, 39, 40, 41], label: "EYE" }, // Eye
   rightEye: { indices: [42, 43, 44, 45, 46, 47], label: "EYE" }, // Eye
-  leftEyelid: { indices: [17, 21, 39, 38, 37, 36], label: "LID" }, // Eyelid
-  rightEyelid: { indices: [22, 26, 45, 44, 43, 42], label: "LID" }, // Eyelid
+  leftEyelid: { indices: [17, 21, 27, 39, 38, 37, 36], label: "LID" }, // Eyelid
+  rightEyelid: { indices: [22, 26, 45, 44, 43, 42, 27], label: "LID" }, // Eyelid
   topLip: { indices: [48, 49, 50, 51, 52, 53, 54, 63, 62, 61], label: "LIPS" }, // Lips
   bottomLip: { indices: [60, 59, 58, 57, 56, 55, 54, 65, 66, 67], label: "LIPS" }, // Lips
 };
