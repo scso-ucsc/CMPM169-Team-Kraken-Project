@@ -1,18 +1,9 @@
 let img; // p5.Image for drawing
 let imgElement; // HTML <img> element for face detection
 let photo;
-<<<<<<< HEAD
-let phoneWidth = 720;  // width
-let phoneHeight = 720; // height
-let scaleValue = 6;
-let fileInput;
-let detections; // Store face detection results
-let currentFilter = 'normal'; // 'normal', 'grayscale', 'color'
-=======
 let phoneWidth = 360;
 let phoneHeight = 640;
 let scaleValue = 10;
->>>>>>> parent of 3310463 (Adding filters to final)
 
 // Words to describe facial features
 const colorFeatureWords = {
@@ -514,17 +505,17 @@ function setupUI() {
   uploadButton.parent('button-container');
   uploadButton.mousePressed(() => fileInput.elt.click());
 
-  let normalButton = createButton('Normal');
-  normalButton.parent('button-container');
-  normalButton.mousePressed(() => currentFilter = 'normal');
+  // let normalButton = createButton('Normal');
+  // normalButton.parent('button-container');
+  // normalButton.mousePressed(() => currentFilter = 'normal');
 
-  let grayscaleButton = createButton('Grayscale');
-  grayscaleButton.parent('button-container');
-  grayscaleButton.mousePressed(() => currentFilter = 'grayscale');
+  // let grayscaleButton = createButton('Grayscale');
+  // grayscaleButton.parent('button-container');
+  // grayscaleButton.mousePressed(() => currentFilter = 'grayscale');
 
-  let colorButton = createButton('Color');
-  colorButton.parent('button-container');
-  colorButton.mousePressed(() => currentFilter = 'color');
+  // let colorButton = createButton('Color');
+  // colorButton.parent('button-container');
+  // colorButton.mousePressed(() => currentFilter = 'color');
 }
 
 function capturePhoto() {
