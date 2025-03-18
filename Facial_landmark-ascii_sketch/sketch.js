@@ -1,23 +1,39 @@
-let asciiChar = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,^`'.                                 ";
-
 let img; // p5.Image for drawing
 let imgElement; // HTML <img> element for face detection
 let photo;
-let phoneWidth = 840;  // width
-let phoneHeight = 680; // height
-let scaleValue = 10;
+let phoneWidth = 360;  // width
+let phoneHeight = 640; // height
+let scaleValue = 6;
 let fileInput;
 
-// Landmark labels
-const landmarkLabels = {
-  jawline: { indices: Array.from({ length: 17 }, (_, i) => i), label: "JAWLINE", color: [255, 0, 0] }, // Points 0–16 (red)
-  nose: { indices: Array.from({ length: 9 }, (_, i) => i + 27), label: "NOSE", color: [0, 255, 0] }, // Points 27–35 (green)
-  leftEye: { indices: Array.from({ length: 6 }, (_, i) => i + 36), label: "LEFTEYE", color: [0, 0, 255] }, // Points 36–41 (blue)
-  rightEye: { indices: Array.from({ length: 6 }, (_, i) => i + 42), label: "RIGHTEYE", color: [255, 255, 0] }, // Points 42–47 (yellow)
-  mouth: { indices: Array.from({ length: 20 }, (_, i) => i + 48), label: "MOUTH", color: [255, 0, 255] }, // Points 48–67 (magenta)
+// Words to describe facial features
+const featureWords = {
+  leftJaw: { indices: [0, 1, 2, 3], label: "JAW" }, // Left side of the jaw
+  rightJaw: { indices: [13, 14, 15, 16], label: "JAW" }, // Right side of the jaw
+  chin: { indices: [6, 7, 8, 9, 10, 54, 48], label: "CHIN" }, // Center bottom point of the jaw
+  leftCheekbone: { indices: [0, 27, 29, 2], label: "CHEEKBONE" }, // Left cheekbone
+  rightCheekbone: { indices: [14, 16, 27, 29], label: "CHEEKBONE" }, // Right cheekbone
+  leftCheek: { indices: [2, 3, 4, 5, 6, 48, 52, 35, 29], label: "CHEEK" }, // Left cheek
+  rightCheek: { indices: [10, 11, 12, 13, 14, 29, 31, 50, 55], label: "CHEEK" }, // Right cheek
+  nose: { indices: [31, 21, 22, 35], label: "NOSE" }, // Nose
+  // philitrum: { indices: [50, 52, 34, 32], label: "PHILITRUM" }, // Philitrum
+  bridge: { indices: [29, 21, 22], label: "BRIDGE" }, // Bridge of the nose
+  leftNostril: { indices: [31], label: "NOSTRIL" }, // Nostril
+  rightNostril: { indices: [34], label: "NOSTRIL" }, // Nostril
+  leftEyebrow: { indices: [17, 18, 19, 20, 21], label: "BROW" }, // Eyebrow
+  rightEyebrow: { indices: [22, 23, 24, 25, 26], label: "BROW" }, // Eyebrow
+  leftTemple: { indices: [0, 17, 41, 1], label: "TEMPLE" }, // Temple
+  rightTemple: { indices: [26, 16, 15, 46], label: "TEMPLE" }, // Temple
+  leftEye: { indices: [36, 37, 38, 39, 40, 41], label: "EYE" }, // Eye
+  rightEye: { indices: [42, 43, 44, 45, 46, 47], label: "EYE" }, // Eye
+  leftEyelid: { indices: [17, 21, 27, 39, 38, 37, 36], label: "LID" }, // Eyelid
+  rightEyelid: { indices: [22, 26, 45, 44, 43, 42, 27], label: "LID" }, // Eyelid
+  topLip: { indices: [48, 49, 50, 51, 52, 53, 54, 63, 62, 61], label: "LIPS" }, // Lips
+  bottomLip: { indices: [60, 59, 58, 57, 56, 55, 54, 65, 66, 67], label: "LIPS" }, // Lips
 };
 
 let detections; // Store face detection results
+
 function setup() {
   let canvas = createCanvas(phoneWidth, phoneHeight);
   canvas.parent('canvas-container');
@@ -32,9 +48,9 @@ function setup() {
 
   // Load face-api.js models
   loadModels();
+  
   setupUI();
 }
-
 
 async function loadModels() {
   await faceapi.nets.tinyFaceDetector.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights');
@@ -46,11 +62,8 @@ function draw() {
   background(255);
 
   if (photo) {
-    // ASCII mode
-    displayASCIIPhoto();
-    if (detections) {
-      overlayLandmarkLabels();
-    }
+    // Word-based mode
+    displayWordPhoto();
   } else if (img) {
     // Normal mode
     let imgWidth = img.width;
@@ -69,7 +82,7 @@ function draw() {
     if (detections) {
       const scaleX = newWidth / imgElement.width;
       const scaleY = newHeight / imgElement.height;
-
+      let i = 0;
       for (let detection of detections) {
         // Draw the facial landmarks
         const landmarks = detection.landmarks;
@@ -79,6 +92,14 @@ function draw() {
           let x = point._x * scaleX + xOffset;
           let y = point._y * scaleY + yOffset;
           ellipse(x, y, 5, 5); // Draw a small circle at each landmark
+          text(i, x + 15, y);
+          i++;
+        }
+
+        // Draw the outlines of the facial feature polygons
+        for (let [key, { indices, label }] of Object.entries(featureWords)) {
+          const polygon = getFeaturePolygon(landmarks, indices);
+          drawPolygon(polygon, scaleX, scaleY, xOffset, yOffset, color(random(255), random(255), random(255)));
         }
       }
     }
@@ -87,9 +108,13 @@ function draw() {
 
 function handleFile(file) {
   if (file.type === 'image') {
+    img = null;
+    photo = null;
+    detections = null;
+    
     img = loadImage(file.data, () => {
       img.resize(phoneWidth, phoneHeight);
-      // Create a cropped and resized version for ASCII conversion
+      // Create a cropped and resized version for processing
       photo = img.get();
       photo.resize(phoneWidth / scaleValue, phoneHeight / scaleValue);
     });
@@ -117,90 +142,183 @@ async function detectFaces(imgElement) {
 function keyPressed() {
   if (key === " " && img && !photo) {
     photo = img.get();
-    photo.resize(phoneWidth / scaleValue, phoneHeight / scaleValue); // Shrink the photo for ASCII processing
+    photo.resize(phoneWidth / scaleValue, phoneHeight / scaleValue); // Shrink the photo for processing
   } else if (key === " " && photo) {
     photo = null;
   }
 }
 
-function displayASCIIPhoto() {
+function displayWordPhoto() {
   background(0);
   photo.loadPixels();
-  for (let i = 0; i < photo.width; i++) {
-    for (let j = 0; j < photo.height; j++) {
-      let pixelIndex = (i + j * photo.width) * 4;
-      let r = photo.pixels[pixelIndex + 0];
-      let g = photo.pixels[pixelIndex + 1];
-      let b = photo.pixels[pixelIndex + 2];
 
-      let bright = (r + g + b) / 3;
-      let tIndex = floor(map(bright, 0, 255, 0, asciiChar.length));
+  if (detections && detections.length > 0) {
+    const landmarks = detections[0].landmarks;
+    const headPolygon = getHeadPolygon(landmarks, 30); // Add 30px padding
 
-      let t = asciiChar.charAt(tIndex);
+    // Draw words for each facial feature
+    for (let [key, { indices, label }] of Object.entries(featureWords)) {
+      fillFeatureWithWords(landmarks, indices, label);
+    }
+  }
+}
+function fillFeatureWithWords(landmarks, indices, label) {
+  // Get the bounding box of the feature
+  let minX = Infinity, minY = Infinity;
+  let maxX = -Infinity, maxY = -Infinity;
+  for (let i of indices) {
+    const point = landmarks.positions[i];
+    minX = min(minX, point._x);
+    minY = min(minY, point._y);
+    maxX = max(maxX, point._x);
+    maxY = max(maxY, point._y);
+  }
 
-      let x = i * scaleValue + scaleValue / 2;
-      let y = j * scaleValue + scaleValue / 2;
+  // Convert bounding box to grid coordinates
+  minX = floor((minX / imgElement.width) * photo.width);
+  minY = floor((minY / imgElement.height) * photo.height);
+  maxX = floor((maxX / imgElement.width) * photo.width);
+  maxY = floor((maxY / imgElement.height) * photo.height);
 
-      text(t, x, y);
+  let label_length = label.length;
+  let prev_word_start = -1;
+
+  // Fill the re gion with words
+  for (let y = minY; y <= maxY; y++) {
+    for (let x = minX; x <= maxX; x++) {
+      if (pointInPolygon({ x, y }, getFeaturePolygon(landmarks, indices))) {
+        if (x > prev_word_start + label_length - 1) {
+          drawWordAtPoint(x, y, label, landmarks, indices);
+          prev_word_start = x;
+        }
+      }
+    }
+    prev_word_start = 0;
+  }
+}
+
+function drawWordAtPoint(x, y, label, landmarks, indices) {
+  // Check if the current position is within the photo bounds
+  if (x >= 0 && x < photo.width && y >= 0 && y < photo.height) {
+    // Split the label into individual letters
+    const letters = label.split('');
+
+    // Calculate the size of each grid cell
+    const cellWidth = scaleValue; // Width of each cell
+    const cellHeight = scaleValue; // Height of each cell
+
+    // Iterate over each letter
+    for (let i = 0; i < letters.length; i++) {
+      // Calculate the position of the current letter within the grid
+      const letterX = x * scaleValue + i * cellWidth + cellWidth / 2;
+      const letterY = y * scaleValue + cellHeight / 2;
+
+      // Calculate the pixel position in the photo for the current letter
+      const pixelX = x + i; // Adjust for the letter's position in the word
+      const pixelY = y;
+
+      // Check if the pixel position is within the photo bounds and the head polygon
+      if (pixelX >= 0 && pixelX < photo.width && pixelY >= 0 && pixelY < photo.height) {
+        // Check if the current letter's position is within the head polygon
+        if (!pointInPolygon({ x: pixelX, y: pixelY }, getFeaturePolygon(landmarks, indices))) {
+          break; // Stop drawing further letters if outside the polygon
+        }
+
+        // Get the pixel brightness at the current letter's position
+        let pixelIndex = (pixelX + pixelY * photo.width) * 4;
+        let r = photo.pixels[pixelIndex + 0];
+        let g = photo.pixels[pixelIndex + 1];
+        let b = photo.pixels[pixelIndex + 2];
+        let brightness = (r + g + b) / 3;
+
+        // Draw a black box behind the letter
+        fill(0); // Black color for the box
+        noStroke();
+        rectMode(CENTER);
+        rect(letterX, letterY, cellWidth, cellHeight); // Draw the cell
+
+        // Set the grayscale color based on brightness
+        fill(brightness);
+        noStroke();
+
+        // Draw the letter at this position
+        text(letters[i], letterX, letterY);
+      } else {
+        break; // Stop drawing further letters if outside the photo bounds
+      }
     }
   }
 }
 
-function overlayLandmarkLabels() {
-  // Logic for overlaying facial landmarks can be placed here if needed
-  const scaleX = phoneWidth / imgElement.width;
-  const scaleY = phoneHeight / imgElement.height;
-
-  for (let detection of detections) {
-    const landmarks = detection.landmarks;
-
-    noStroke();
-    textSize(12); // Smaller text size for labels
-    textAlign(CENTER, CENTER);
-
-    for (let [key, { indices, label, color }] of Object.entries(landmarkLabels)) {
-      fill(color);
-      let labelLetters = label.split(''); // Split label into individual letters
-      let letterIndex = 0;
-
-      for (let i = 0; i < indices.length - 1; i++) {
-        const startPoint = landmarks.positions[indices[i]];
-        const endPoint = landmarks.positions[indices[i + 1]];
-
-        // Convert landmark positions to grid coordinates
-        let startX = floor((startPoint._x * scaleX) / scaleValue);
-        let startY = floor((startPoint._y * scaleY) / scaleValue);
-        let endX = floor((endPoint._x * scaleX) / scaleValue);
-        let endY = floor((endPoint._y * scaleY) / scaleValue);
-
-        // Interpolate between start and end points
-        let steps = max(abs(endX - startX), abs(endY - startY));
-        for (let t = 0; t <= steps; t++) {
-          let x = floor(lerp(startX, endX, t / steps));
-          let y = floor(lerp(startY, endY, t / steps));
-
-          // Place the next letter in the label
-          if (x >= 0 && x < photo.width && y >= 0 && y < photo.height) {
-            // Erase the ASCII character at this position
-            fill(0); // Use the background color (black)
-            noStroke();
-            rect(
-              x * scaleValue,
-              y * scaleValue,
-              scaleValue,
-              scaleValue 
-            );
-
-            fill(color);
-            let letter = labelLetters[letterIndex % labelLetters.length];
-            text(letter, x * scaleValue + scaleValue / 2, y * scaleValue + scaleValue / 2);
-            letterIndex++;
-          }
-        }
-      }
-    }
+function getFeaturePolygon(landmarks, indices) {
+  const polygon = [];
+  if (!imgElement) {
+    console.error("imgElement is null. Cannot calculate polygon.");
+    return polygon; // Return an empty polygon if imgElement is null
   }
 
-  // Reset fill color
-  fill(255, 255, 255);
+  // Use photo if available, otherwise use img
+  const width = photo ? photo.width : img.width;
+  const height = photo ? photo.height : img.height;
+
+  for (let i of indices) {
+    const point = landmarks.positions[i];
+    const scaledX = (point._x / imgElement.width) * width;
+    const scaledY = (point._y / imgElement.height) * height;
+    polygon.push({ x: scaledX, y: scaledY });
+  }
+  return polygon;
+}
+
+function drawPolygon(polygon, scaleX, scaleY, xOffset, yOffset, color) {
+  noFill();
+  stroke(color); // Green color for the polygon outlines
+  strokeWeight(2); // Thickness of the outline
+  beginShape();
+  for (let point of polygon) {
+    // Scale and translate the polygon points to match the image
+    let x = point.x;
+    let y = point.y;
+    vertex(x, y);
+  }
+  endShape(CLOSE);
+}
+
+function getHeadPolygon(landmarks, padding = 20) {
+  const jawline = landmarks.getJawOutline(); // Points 0–16
+  const eyebrows = landmarks.getLeftEyeBrow().concat(landmarks.getRightEyeBrow()); // Points 17–26
+
+  // Find the top of the eyebrows (minimum y-value)
+  let minY = Infinity;
+  eyebrows.forEach(point => {
+    if (point.y < minY) minY = point.y;
+  });
+
+  // Add padding above the eyebrows to include forehead and hair
+  const paddedMinY = minY - padding;
+
+  // Create the polygon
+  const polygon = [];
+  jawline.forEach(point => {
+    // Scale the landmark coordinates to match the photo resolution
+    const scaledX = (point._x / imgElement.width) * photo.width;
+    const scaledY = (point._y / imgElement.height) * photo.height;
+    polygon.push({ x: scaledX, y: scaledY });
+  });
+
+  return polygon;
+}
+
+function pointInPolygon(point, polygon) {
+  let x = point.x, y = point.y;
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    let xi = polygon[i].x, yi = polygon[i].y;
+    let xj = polygon[j].x, yj = polygon[j].y;
+
+    let intersect = ((yi > y) !== (yj > y)) &&
+      (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
 }
