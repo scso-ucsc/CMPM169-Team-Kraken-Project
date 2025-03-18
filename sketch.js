@@ -1,4 +1,5 @@
 let video;
+let streamReady = false;
 let img; // p5.Image for drawing
 let imgElement; // HTML <img> element for face detection
 let photo;
