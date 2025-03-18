@@ -2,8 +2,8 @@ let asciiChar = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:
 
 let video;
 let photo;
-let phoneWidth = 360;
-let phoneHeight = 640;
+let phoneWidth = 840;
+let phoneHeight = 680;
 let scaleValue = 10;
 
 var streamReady = false;
