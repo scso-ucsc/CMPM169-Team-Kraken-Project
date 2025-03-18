@@ -1,3 +1,5 @@
+let video;
+let streamReady = false;
 let img; // p5.Image for drawing
 let imgElement; // HTML <img> element for face detection
 let photo;
@@ -62,6 +64,12 @@ function setup() {
   let canvas = createCanvas(phoneWidth, phoneHeight);
   canvas.parent('canvas-container');
 
+  video = createCapture(VIDEO, function() {
+    streamReady = true;
+  });
+  video.size(640, 480);
+  video.hide();
+
   // Create and hide file input
   fileInput = createFileInput(handleFile);
   fileInput.hide();
@@ -74,7 +82,6 @@ function setup() {
   loadModels();
   
   setupUI();
-  console.log("foo")
 }
 
 async function loadModels() {
@@ -131,6 +138,8 @@ function draw() {
         }
       }
     }
+  } else if (streamReady) {
+    displayVideoFeed();
   }
 }
 
@@ -166,7 +175,7 @@ async function detectFaces(imgElement) {
 }
 
 function displayNormalPhoto() {
-  image(photo, 0, 0, phoneWidth, phoneHeight);
+  image(img, 0, 0, phoneWidth, phoneHeight);
 }
 
 function displayGrayscalePhoto() {
@@ -539,4 +548,24 @@ function capturePhoto() {
 
   photo = video.get(cropX, cropY, cropWidth, cropHeight);
   photo.resize(phoneWidth / scaleValue, phoneHeight / scaleValue);
+}
+
+function displayVideoFeed(){
+  let videoAspect = video.width / video.height;
+  let phoneAspect = phoneWidth / phoneHeight;
+
+  let cropX = 0;
+  let cropY = 0;
+  let cropWidth = video.width;
+  let cropHeight = video.height;
+
+  if(videoAspect > phoneAspect){ //Cropping input video to phone camera dimensions
+    cropWidth = video.height * phoneAspect;
+    cropX = (video.width - cropWidth) / 2;
+  } else{
+    cropHeight = video.width * phoneAspect;
+    cropY = (video.height - cropHeight) / 2;
+  }
+
+  image(video, 0, 0, phoneWidth, phoneHeight, cropX, cropY, cropWidth, cropHeight);
 }

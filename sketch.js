@@ -63,6 +63,7 @@ function setup() {
 
   video = createCapture(VIDEO, function() {
     streamReady = true;
+    console.log("stream ready");
   });
   video.size(640, 480);
   video.hide();
@@ -523,9 +524,9 @@ function setupUI() {
   captureButton.parent('button-container');
   captureButton.mousePressed(capturePhoto);
 
-  let uploadButton = createButton('Upload Image');
-  uploadButton.parent('button-container');
-  uploadButton.mousePressed(() => fileInput.elt.click());
+  // let uploadButton = createButton('Upload Image');
+  // uploadButton.parent('button-container');
+  // uploadButton.mousePressed(() => fileInput.elt.click());
 
   // let normalButton = createButton('Normal');
   // normalButton.parent('button-container');
