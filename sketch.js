@@ -77,6 +77,7 @@ function setup() {
 }
 
 async function loadModels() {
+  await tf.ready();
   await faceapi.nets.tinyFaceDetector.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights');
   await faceapi.nets.faceLandmark68Net.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights');
   console.log('Models loaded');
