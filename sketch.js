@@ -1,8 +1,8 @@
 let img; // p5.Image for drawing
 let imgElement; // HTML <img> element for face detection
 let photo;
-let phoneWidth = 360;  // width
-let phoneHeight = 640; // height
+let phoneWidth = 720;  // width
+let phoneHeight = 720; // height
 let scaleValue = 6;
 let fileInput;
 let detections; // Store face detection results
@@ -165,7 +165,7 @@ async function detectFaces(imgElement) {
 }
 
 function displayNormalPhoto() {
-  image(photo, 0, 0, phoneWidth, phoneHeight);
+  image(img, 0, 0, phoneWidth, phoneHeight);
 }
 
 function displayGrayscalePhoto() {
