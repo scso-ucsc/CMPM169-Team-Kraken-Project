@@ -38,17 +38,19 @@ function setup() {
   let canvas = createCanvas(phoneWidth, phoneHeight);
   canvas.parent('canvas-container');
 
-  // Create and hide file input
-  fileInput = createFileInput(handleFile);
-  fileInput.hide();
-
-  fill(255);
-  textSize(scaleValue);
-  textAlign(CENTER, CENTER);
+  // Retrieve the image data from local storage
+  let imageData = localStorage.getItem('uploadedImage');
+  if (imageData) {
+    img = loadImage(imageData, () => {
+      img.resize(phoneWidth, phoneHeight);
+      img.hide();
+      console.log('Image loaded in the filter sketch');
+    });
+  }
 
   // Load face-api.js models
   loadModels();
-  
+
   setupUI();
 }
 
@@ -142,6 +144,7 @@ async function detectFaces(imgElement) {
 function keyPressed() {
   if (key === " " && img && !photo) {
     photo = img.get();
+    console.log("Photo retrieved");
     photo.resize(phoneWidth / scaleValue, phoneHeight / scaleValue); // Shrink the photo for processing
   } else if (key === " " && photo) {
     photo = null;

@@ -32,24 +32,41 @@ const featureWords = {
   bottomLip: { indices: [60, 59, 58, 57, 56, 55, 54, 65, 66, 67], label: "DRY" }, // Lips
 };
 
+
 function setup() {
   let canvas = createCanvas(phoneWidth, phoneHeight);
   canvas.parent('canvas-container');
 
-  // Create and hide file input
-  fileInput = createFileInput(handleFile);
-  fileInput.hide();
-
-  fill(255);
-  textSize(scaleValue);
-  textAlign(CENTER, CENTER);
+  // Retrieve the image data from local storage
+  let imageData = localStorage.getItem('uploadedImage');
+  if (imageData) {
+    img = loadImage(imageData, () => {
+      img.resize(phoneWidth, phoneHeight);
+      console.log('Image loaded in the filter sketch');
+    });
+  }
 
   // Load face-api.js models
   loadModels();
-  
+
   setupUI();
 }
 
+function draw() {
+  background(255);
+
+  if (img) {
+    // Display the image
+    image(img, 0, 0, phoneWidth, phoneHeight);
+
+    // Apply the filter (e.g., grayscale or color)
+    if (currentFilter === 'grayscale') {
+      filter(GRAY);
+    } else if (currentFilter === 'color') {
+      // Apply color filter logic here
+    }
+  }
+}
 async function loadModels() {
   await faceapi.nets.tinyFaceDetector.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights');
   await faceapi.nets.faceLandmark68Net.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights');

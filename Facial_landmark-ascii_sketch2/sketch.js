@@ -1,11 +1,12 @@
-let video;
-let streamReady = false;
 let img; // p5.Image for drawing
 let imgElement; // HTML <img> element for face detection
 let photo;
-let phoneWidth = 360;
-let phoneHeight = 640;
-let scaleValue = 10;
+let phoneWidth = 360;  // width
+let phoneHeight = 640; // height
+let scaleValue = 6;
+let fileInput;
+let detections; // Store face detection results
+let currentFilter = 'normal'; // 'normal', 'grayscale', 'color'
 
 // Words to describe facial features
 const colorFeatureWords = {
@@ -61,12 +62,6 @@ function setup() {
   let canvas = createCanvas(phoneWidth, phoneHeight);
   canvas.parent('canvas-container');
 
-  video = createCapture(VIDEO, function() {
-    streamReady = true;
-  });
-  video.size(640, 480);
-  video.hide();
-
   // Create and hide file input
   fileInput = createFileInput(handleFile);
   fileInput.hide();
@@ -79,11 +74,10 @@ function setup() {
   loadModels();
   
   setupUI();
+  console.log("foo")
 }
 
 async function loadModels() {
-  await tf.ready();
-  console.log("Tensorflow ready");
   await faceapi.nets.tinyFaceDetector.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights');
   await faceapi.nets.faceLandmark68Net.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights');
   console.log('Models loaded');
@@ -137,8 +131,6 @@ function draw() {
         }
       }
     }
-  } else if (streamReady) {
-    displayVideoFeed();
   }
 }
 
@@ -147,23 +139,11 @@ function handleFile(file) {
     img = null; // Resetting variables
     photo = null;
     detections = null;
-
+    
     img = loadImage(file.data, () => {
       img.resize(phoneWidth, phoneHeight);
       photo = img.get();
       photo.resize(phoneWidth / scaleValue, phoneHeight / scaleValue);
-
-      // Convert the image to a data URL
-      let imageData = img.canvas.toDataURL('image/png');
-
-      // Save the image data to local storage
-      localStorage.setItem('uploadedImage', imageData);
-
-      // Update the filter links with the image data
-      document.querySelector('.home-button[href*="grayscale"]').href = 
-        `./Facial_landmark-ascii_sketch/index.html?filter=grayscale`;
-      document.querySelector('.home-button[href*="color"]').href = 
-        `./Facial_landmark_sketch/index.html?filter=color`;
     });
 
     // Use createImg() for face-api.js
@@ -186,7 +166,7 @@ async function detectFaces(imgElement) {
 }
 
 function displayNormalPhoto() {
-  image(img, 0, 0, phoneWidth, phoneHeight);
+  image(photo, 0, 0, phoneWidth, phoneHeight);
 }
 
 function displayGrayscalePhoto() {
@@ -527,17 +507,17 @@ function setupUI() {
   uploadButton.parent('button-container');
   uploadButton.mousePressed(() => fileInput.elt.click());
 
-  // let normalButton = createButton('Normal');
-  // normalButton.parent('button-container');
-  // normalButton.mousePressed(() => currentFilter = 'normal');
+  let normalButton = createButton('Normal');
+  normalButton.parent('button-container');
+  normalButton.mousePressed(() => currentFilter = 'normal');
 
-  // let grayscaleButton = createButton('Grayscale');
-  // grayscaleButton.parent('button-container');
-  // grayscaleButton.mousePressed(() => currentFilter = 'grayscale');
+  let grayscaleButton = createButton('Grayscale');
+  grayscaleButton.parent('button-container');
+  grayscaleButton.mousePressed(() => currentFilter = 'grayscale');
 
-  // let colorButton = createButton('Color');
-  // colorButton.parent('button-container');
-  // colorButton.mousePressed(() => currentFilter = 'color');
+  let colorButton = createButton('Color');
+  colorButton.parent('button-container');
+  colorButton.mousePressed(() => currentFilter = 'color');
 }
 
 function capturePhoto() {
@@ -559,25 +539,4 @@ function capturePhoto() {
 
   photo = video.get(cropX, cropY, cropWidth, cropHeight);
   photo.resize(phoneWidth / scaleValue, phoneHeight / scaleValue);
-}
-
-
-function displayVideoFeed(){
-  let videoAspect = video.width / video.height;
-  let phoneAspect = phoneWidth / phoneHeight;
-
-  let cropX = 0;
-  let cropY = 0;
-  let cropWidth = video.width;
-  let cropHeight = video.height;
-
-  if(videoAspect > phoneAspect){ //Cropping input video to phone camera dimensions
-    cropWidth = video.height * phoneAspect;
-    cropX = (video.width - cropWidth) / 2;
-  } else{
-    cropHeight = video.width * phoneAspect;
-    cropY = (video.height - cropHeight) / 2;
-  }
-
-  image(video, 0, 0, phoneWidth, phoneHeight, cropX, cropY, cropWidth, cropHeight);
 }
