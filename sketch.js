@@ -520,9 +520,9 @@ function pointInPolygon(point, polygon) {
 }
 
 function setupUI() {
-  let captureButton = createButton('Capture Photo');
-  captureButton.parent('button-container');
-  captureButton.mousePressed(capturePhoto);
+  // let captureButton = createButton('Capture Photo');
+  // captureButton.parent('button-container');
+  // captureButton.mousePressed(capturePhoto);
 
   // let uploadButton = createButton('Upload Image');
   // uploadButton.parent('button-container');

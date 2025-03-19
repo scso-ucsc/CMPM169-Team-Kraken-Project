@@ -239,6 +239,7 @@ function fillFeatureWithWords(landmarks, indices, label, isGrayscale) {
 }
 
 function grayscaleDrawWordAtPoint(x, y, label, landmarks, indices) {
+  textSize(scaleValue);
   // Check if the current position is within the photo bounds
   if (x >= 0 && x < photo.width && y >= 0 && y < photo.height) {
     // Split the label into individual letters
@@ -508,9 +509,9 @@ function pointInPolygon(point, polygon) {
 }
 
 function setupUI() {
-  let captureButton = createButton('Capture Photo');
-  captureButton.parent('button-container');
-  captureButton.mousePressed(capturePhoto);
+  // let captureButton = createButton('Capture Photo');
+  // captureButton.parent('button-container');
+  // captureButton.mousePressed(capturePhoto);
 
   let uploadButton = createButton('Upload Image');
   uploadButton.parent('button-container');
