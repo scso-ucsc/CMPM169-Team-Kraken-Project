@@ -70,6 +70,7 @@ function setup() {
   video.size(640, 480);
   video.hide();
 
+  
   // Create and hide file input
   fileInput = createFileInput(handleFile);
   fileInput.hide();
